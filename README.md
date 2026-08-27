@@ -34,7 +34,7 @@ chelaile-devkit/
 │   └── index.py           # Vercel Serverless 入口 (Flask 适配器)
 ├── docs/
 │   └── api-reference.html # 完整 API 文档 (接口介绍/鉴权/签名算法)
-├── static/                # 前端静态文件
+├── public/                # 前端静态文件 (Vercel 自动部署)
 │   ├── index.html         # 主页面 (SPA)
 │   ├── css/
 │   │   └── app.css        # 样式表
