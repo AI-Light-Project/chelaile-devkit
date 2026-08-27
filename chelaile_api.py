@@ -10,6 +10,7 @@ import json
 import base64
 import re
 import html
+import time
 import requests
 from urllib.parse import urlencode
 from Crypto.Cipher import AES
@@ -107,12 +108,41 @@ def parse_encrypted_response(raw_text: str) -> dict:
     return _decode_html_entities(data)
 
 
-def request_encrypted(url: str, params: dict) -> dict:
-    """发送加密接口请求"""
-    params_with_sign = {**params, "cryptoSign": crypto_sign(params)}
-    full_url = f"{url}?{urlencode(params_with_sign)}"
-    resp = requests.get(full_url, headers=REQUEST_HEADERS, timeout=15)
-    return parse_encrypted_response(resp.text)
+def _is_rate_limited(result: dict) -> bool:
+    """检测 API 是否返回限流空结果（所有 count 为 0 且数组为空）"""
+    if not isinstance(result, dict) or not result:
+        return True
+    # 搜索接口的 result 嵌套在 result 字段里
+    inner = result.get("result", result)
+    if not isinstance(inner, dict) or not inner:
+        return True
+    has_count = False
+    for key, value in inner.items():
+        if 'count' in key.lower():
+            has_count = True
+            if value != 0:
+                return False
+        elif isinstance(value, list) and len(value) > 0:
+            return False
+    # 没有任何 count 字段也没有任何非空数组，不判定为限流
+    return has_count
+
+
+def request_encrypted(url: str, params: dict, retries: int = 2) -> dict:
+    """发送加密接口请求，带自动重试（API 限流时会返回空结果）"""
+    for attempt in range(retries + 1):
+        params_with_sign = {**params, "cryptoSign": crypto_sign(params)}
+        full_url = f"{url}?{urlencode(params_with_sign)}"
+        resp = requests.get(full_url, headers=REQUEST_HEADERS, timeout=15)
+        result = parse_encrypted_response(resp.text)
+
+        # 检测限流：如果 result 中的所有 count 都为 0 且数组为空，可能是限流
+        if _is_rate_limited(result):
+            if attempt < retries:
+                time.sleep(1.5 * (attempt + 1))  # 递增等待
+                continue
+        return result
+    return result
 
 
 def request_signed(url: str, params: dict) -> dict:

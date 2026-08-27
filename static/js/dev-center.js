@@ -36,7 +36,7 @@ const DevCenter = (function() {
       method: 'GET',
       endpoint: '/api/search',
       backendPath: 'search(cityId, key)',
-      description: '根据关键词搜索线路、站点和 POI，支持模糊匹配。',
+      description: '根据关键词搜索线路、站点和 POI，支持模糊匹配。注意：poiCount/stationCount 为总数，pois/stations 数组仅返回前 3 条。',
       params: [
         { name: 'cityId', type: 'string', required: true, default: '018', desc: '城市 ID' },
         { name: 'key', type: 'string', required: true, default: '吉印大道', desc: '搜索关键词' }
@@ -50,28 +50,18 @@ const DevCenter = (function() {
             gpstype: "gcj",
             lineCount: 0,
             lines: [],
-            stationCount: 0,
-            stations: [],
+            ordertype: "1,2,3",
+            stationCount: 9,
+            stations: [
+              { sId: "12243", sn: "吉印大道", lat: 31.888328, lng: 118.790217, subwayV2: 1 },
+              { sId: "025-5237", sn: "吉印大道", lat: 31.887076, lng: 118.790836, subwayV2: 0 },
+              { sId: "025-4737", sn: "吉印大道北", lat: 31.889046, lng: 118.789296, subwayV2: 0 }
+            ],
             poiCount: 8,
             pois: [
-              {
-                sn: "吉印大道-地铁站-南京市",
-                sn1: "吉印大道-地铁站",
-                sn1Address: "南京市江宁区",
-                lat: 31.885807,
-                lng: 118.795159,
-                sn1Tag: "南京市",
-                sn1Type: 0
-              },
-              {
-                sn: "吉印大道-道路",
-                sn1: "吉印大道",
-                sn1Address: "江宁区",
-                lat: 31.892694,
-                lng: 118.806174,
-                sn1Tag: "道路",
-                sn1Type: 0
-              }
+              { sn1: "吉印大道-地铁站", sn1Tag: "南京市", lat: 31.885807, lng: 118.795159 },
+              { sn1: "吉印大道", sn1Tag: "道路", lat: 31.892694, lng: 118.806174 },
+              { sn1: "南京东南实验学校", sn1Tag: "九年一贯制学校", lat: 31.897691, lng: 118.819802 }
             ]
           }
         }
