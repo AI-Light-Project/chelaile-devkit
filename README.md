@@ -2,7 +2,15 @@
 
 基于"车来了"小程序 API 逆向工程的开发者工具包，包含完整的 API 文档、在线调试工具，以及 6 个可交互的示例应用。
 
-## 🚀 快速开始
+## ⚡ 一键部署到 Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-repo/chelaile-devkit)
+
+点击上方按钮，或手动 Fork 本项目后在 Vercel 中导入，即可一键部署。无需服务器，免费额度即可使用。
+
+> **注意**：部署后首次访问可能需要几秒冷启动时间（Vercel Serverless 特性）。
+
+## 🚀 本地运行
 
 ### 安装依赖
 
@@ -22,19 +30,23 @@ python server.py
 
 ```
 chelaile-devkit/
-├── server.py              # Flask 后端服务 (API 代理 + 静态文件)
+├── api/
+│   └── index.py           # Vercel Serverless 入口 (Flask 适配器)
+├── static/                # 前端静态文件
+│   ├── index.html         # 主页面 (SPA)
+│   ├── css/
+│   │   └── app.css        # 样式表
+│   └── js/
+│       ├── api.js         # 前端 API 客户端
+│       ├── dev-center.js  # 开发者中心模块
+│       ├── demos.js       # 6 个示例应用模块
+│       └── app.js         # 主应用入口 (路由 + 初始化)
+├── server.py              # Flask 后端服务 (本地开发用)
 ├── chelaile_api.py        # 车来了 API Python 客户端
 ├── requirements.txt       # Python 依赖
-├── README.md              # 本文件
-└── static/                # 前端静态文件
-    ├── index.html         # 主页面 (SPA)
-    ├── css/
-    │   └── app.css        # 样式表
-    └── js/
-        ├── api.js         # 前端 API 客户端
-        ├── dev-center.js  # 开发者中心模块
-        ├── demos.js       # 6 个示例应用模块
-        └── app.js         # 主应用入口 (路由 + 初始化)
+├── vercel.json            # Vercel 部署配置
+├── .vercelignore          # Vercel 部署忽略文件
+└── README.md              # 本文件
 ```
 
 ## 🛠 开发者中心
@@ -96,6 +108,40 @@ chelaile-devkit/
 - **签名算法**: MD5，盐值 `qwihrnbtmj`
 - **加密算法**: AES-256-ECB，密钥 `FF32AE65FBFD19414EAAFF6291A54B42`
 - **签名格式**: `"k1"="v1"&"k2"="v2"... + salt`
+
+## ☁️ Vercel 部署说明
+
+### 方式一：一键部署
+
+点击 README 顶部的 **Deploy with Vercel** 按钮，按提示操作即可。
+
+### 方式二：命令行部署
+
+```bash
+# 1. 安装 Vercel CLI
+npm i -g vercel
+
+# 2. 登录
+vercel login
+
+# 3. 部署（开发环境）
+vercel
+
+# 4. 部署到生产环境
+vercel --prod
+```
+
+### 部署后访问
+
+- 开发环境：`https://your-project.vercel.app`
+- API 路径：`https://your-project.vercel.app/api/*`
+- 静态页面：`https://your-project.vercel.app/`
+
+### 注意事项
+
+- **冷启动**：Serverless 函数首次调用可能有 2-5 秒延迟，后续请求会快很多
+- **超时限制**：Vercel Hobby 计划函数最大执行时间 10 秒，本项目 API 响应通常在 2 秒内
+- **免费额度**：Vercel Hobby 计划每月 100GB 带宽、无限次 Serverless 请求，个人使用完全足够
 
 ## ⚠️ 免责声明
 
