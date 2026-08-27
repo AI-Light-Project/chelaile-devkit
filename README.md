@@ -32,6 +32,8 @@ python server.py
 chelaile-devkit/
 ├── api/
 │   └── index.py           # Vercel Serverless 入口 (Flask 适配器)
+├── docs/
+│   └── api-reference.html # 完整 API 文档 (接口介绍/鉴权/签名算法)
 ├── static/                # 前端静态文件
 │   ├── index.html         # 主页面 (SPA)
 │   ├── css/
@@ -48,6 +50,17 @@ chelaile-devkit/
 ├── .vercelignore          # Vercel 部署忽略文件
 └── README.md              # 本文件
 ```
+
+## 📖 API 文档
+
+完整接口文档位于 [docs/api-reference.html](docs/api-reference.html)，包含：
+
+- 9 个接口的详细说明、参数表、请求/响应示例
+- 鉴权机制（MD5 签名 + AES-256-ECB 解密）
+- 签名算法和加密流程
+- Python 调用示例代码
+
+本地启动后也可在开发者中心在线查看文档并调试。
 
 ## 🛠 开发者中心
 

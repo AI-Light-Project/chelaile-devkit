@@ -19,6 +19,18 @@ def index():
     return send_from_directory('static', 'index.html')
 
 
+@app.route('/docs')
+def docs():
+    """API 文档页面"""
+    return send_from_directory('docs', 'api-reference.html')
+
+
+@app.route('/docs/<path:filename>')
+def docs_assets(filename):
+    """文档资源文件"""
+    return send_from_directory('docs', filename)
+
+
 # ========== API 接口 ==========
 
 @app.route('/api/cities')

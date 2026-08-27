@@ -12,6 +12,10 @@
       "dest": "api/index.py"
     },
     {
+      "src": "/docs",
+      "dest": "docs/api-reference.html"
+    },
+    {
       "src": "/",
       "dest": "static/index.html"
     },
