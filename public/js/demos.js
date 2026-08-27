@@ -894,6 +894,373 @@ const DemoApps = (function() {
     resultEl.innerHTML = html;
   }
 
+  // ========== 应用 7: 收藏公交线路 ==========
+  // 收藏数据（模拟本地存储）
+  const favoriteLines = [
+    { lineNo: '874', lineId: '002537645730', station: '吉印大道', direction: 0, endSn: '滨江客运站' },
+    { lineNo: '870', lineId: '002538231909', station: '吉印大道', direction: 0, endSn: '谷里总站' },
+  ];
+
+  let favCurrentLine = null;
+  let favCurrentDetail = null;
+  let favRefreshTimer = null;
+
+  function renderFavorites() {
+    return `
+      <div class="app-header">
+        <div class="app-title">
+          <div style="font-size:28px">⭐</div>
+          <div>
+            <h2>收藏公交线路</h2>
+            <div class="app-desc">一键查看收藏线路的实时位置与到站预测</div>
+          </div>
+        </div>
+        <button class="btn" id="favRefreshAllBtn">🔄 刷新全部</button>
+      </div>
+
+      <div id="favList">
+        <div class="alert-box alert-info">⏳ 正在加载收藏线路实时信息...</div>
+      </div>
+
+      <div id="favDetail" style="display:none">
+        <button class="btn btn-back" id="favBackBtn">← 返回收藏列表</button>
+        <div id="favDetailContent"></div>
+      </div>
+    `;
+  }
+
+  function initFavorites() {
+    document.getElementById('favRefreshAllBtn').onclick = loadFavoritesList;
+    document.getElementById('favBackBtn').onclick = () => {
+      clearInterval(favRefreshTimer);
+      favRefreshTimer = null;
+      document.getElementById('favDetail').style.display = 'none';
+      document.getElementById('favList').style.display = 'block';
+    };
+    loadFavoritesList();
+  }
+
+  async function loadFavoritesList() {
+    const listEl = document.getElementById('favList');
+    listEl.innerHTML = '<div class="alert-box alert-info">⏳ 正在加载实时信息...</div>';
+
+    const cards = [];
+    for (const fav of favoriteLines) {
+      try {
+        const detail = await ChelaileAPI.lineDetail(DEFAULT_CITY, fav.lineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+        cards.push({ fav, detail });
+      } catch (e) {
+        cards.push({ fav, detail: { success: false, error: e.message } });
+      }
+    }
+
+    let html = `<h3 style="font-size:14px;margin-bottom:12px">我的收藏（${cards.length} 条）</h3>`;
+
+    cards.forEach(({ fav, detail }, idx) => {
+      const lineInfo = detail.success ? (detail.data.line || {}) : {};
+      const buses = detail.success ? (detail.data.buses || []) : [];
+      const stations = detail.success ? (detail.data.stations || []) : [];
+      const targetStation = stations.find(s => s.sn && s.sn.includes(fav.station));
+
+      // 找到到站目标站最近的车
+      let nearestBus = null;
+      let minETA = null;
+      if (targetStation && buses.length > 0) {
+        for (const bus of buses) {
+          if (bus.travels && bus.travels.length > 0) {
+            const t = bus.travels.find(tt => tt.order === targetStation.order);
+            if (t && t.travelTime > 0 && (minETA === null || t.travelTime < minETA)) {
+              minETA = t.travelTime;
+              nearestBus = bus;
+            }
+          }
+        }
+      }
+
+      const statusText = !detail.success ? '数据加载失败'
+        : buses.length === 0 ? '等待发车'
+        : minETA !== null ? `还有 ${formatETA(minETA)}`
+        : `${buses.length} 辆车运营中`;
+
+      const statusClass = !detail.success ? ''
+        : buses.length === 0 ? 'fav-status-wait'
+        : minETA !== null ? 'fav-status-coming'
+        : 'fav-status-running';
+
+      html += `
+        <div class="fav-card" data-idx="${idx}">
+          <div class="fav-card-left">
+            <div class="fav-line-no">${escapeHtml(fav.lineNo)}路</div>
+            <div class="fav-line-info">
+              <div class="fav-station">🚏 ${escapeHtml(fav.station)}</div>
+              <div class="fav-dest">开往 ${escapeHtml(fav.endSn || lineInfo.endSn || '?')}</div>
+            </div>
+          </div>
+          <div class="fav-card-right">
+            <div class="fav-status ${statusClass}">${statusText}</div>
+            ${nearestBus ? `<div class="fav-bus-id">${escapeHtml(nearestBus.busId)}</div>` : ''}
+            <div class="fav-arrow">›</div>
+          </div>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
+
+    // 绑定卡片点击
+    listEl.querySelectorAll('.fav-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.getAttribute('data-idx'));
+        showFavDetail(cards[idx].fav, cards[idx].detail);
+      });
+    });
+  }
+
+  function showFavDetail(fav, detail) {
+    favCurrentLine = fav;
+    favCurrentDetail = detail;
+
+    document.getElementById('favList').style.display = 'none';
+    document.getElementById('favDetail').style.display = 'block';
+
+    renderFavDetail(fav, detail);
+
+    // 自动刷新（每 30 秒）
+    clearInterval(favRefreshTimer);
+    favRefreshTimer = setInterval(async () => {
+      const newDetail = await ChelaileAPI.lineDetail(DEFAULT_CITY, fav.lineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+      if (newDetail.success) {
+        favCurrentDetail = newDetail;
+        renderFavDetail(fav, newDetail);
+      }
+    }, 30000);
+  }
+
+  function renderFavDetail(fav, detail) {
+    const container = document.getElementById('favDetailContent');
+    if (!detail.success) {
+      container.innerHTML = `<div class="alert-box alert-error">❌ 加载失败: ${detail.error}</div>`;
+      return;
+    }
+
+    const lineInfo = detail.data.line || {};
+    const stations = detail.data.stations || [];
+    const buses = detail.data.buses || [];
+    const targetStation = stations.find(s => s.sn && s.sn.includes(fav.station));
+
+    // 计算车辆在时间轴上的位置
+    const busPositions = buses.map(bus => {
+      const order = bus.order || 0;
+      const travels = bus.travels || [];
+      const etaToTarget = targetStation && travels.find(t => t.order === targetStation.order)?.travelTime;
+      return { bus, order, etaToTarget };
+    }).sort((a, b) => a.order - b.order);
+
+    // 顶部信息
+    const firstBus = busPositions.length > 0 ? busPositions[0] : null;
+    const nearestToTarget = busPositions
+      .filter(b => b.etaToTarget !== undefined && b.etaToTarget > 0)
+      .sort((a, b) => a.etaToTarget - b.etaToTarget)[0];
+
+    container.innerHTML = `
+      <!-- 顶部线路信息 -->
+      <div class="fav-detail-header">
+        <div class="fav-detail-title">
+          <span class="fav-line-badge">${escapeHtml(fav.lineNo)}路</span>
+          <span class="fav-route-text">${escapeHtml(lineInfo.startSn || '?')} → ${escapeHtml(lineInfo.endSn || '?')}</span>
+        </div>
+        <div class="fav-detail-actions">
+          <button class="btn btn-sm" id="favReverseBtn">⇄ 换向</button>
+          <button class="btn btn-sm" id="favRefreshBtn">🔄 刷新</button>
+        </div>
+      </div>
+
+      <!-- 实时状态卡片 -->
+      <div class="fav-status-card">
+        <div class="fav-status-main">
+          <div class="fav-status-label">${nearestToTarget ? '预计到达' : '当前状态'}</div>
+          <div class="fav-status-value ${nearestToTarget ? 'fav-status-coming' : 'fav-status-wait'}">
+            ${nearestToTarget
+              ? formatETA(nearestToTarget.etaToTarget)
+              : buses.length > 0 ? `${buses.length} 辆车运营中` : '等待发车'}
+          </div>
+        </div>
+        <div class="fav-status-meta">
+          <span>候车站：${escapeHtml(targetStation?.sn || fav.station)}</span>
+          <span>首 ${lineInfo.firstTime || '--'} / 末 ${lineInfo.lastTime || '--'}</span>
+          <span>共 ${lineInfo.stationsNum || stations.length || '?'} 站</span>
+        </div>
+      </div>
+
+      <!-- 实用数据网格 -->
+      <div class="fav-data-grid">
+        <div class="fav-data-item">
+          <div class="fav-data-icon">🚍</div>
+          <div class="fav-data-value">${buses.length}</div>
+          <div class="fav-data-label">运营车辆</div>
+        </div>
+        <div class="fav-data-item">
+          <div class="fav-data-icon">⚡</div>
+          <div class="fav-data-value">${buses.length > 0 && buses[0].speed !== undefined ? buses[0].speed.toFixed(1) + ' m/s' : '--'}</div>
+          <div class="fav-data-label">首车速度</div>
+        </div>
+        <div class="fav-data-item">
+          <div class="fav-data-icon">👥</div>
+          <div class="fav-data-value">${buses.length > 0 ? capacityLabel(buses[0].capacity) : '--'}</div>
+          <div class="fav-data-label">拥挤度</div>
+        </div>
+        <div class="fav-data-item">
+          <div class="fav-data-icon">⏱</div>
+          <div class="fav-data-value">${Math.round((lineInfo.stationsNum || stations.length || 30) * 2.5)} 分</div>
+          <div class="fav-data-label">全程约</div>
+        </div>
+      </div>
+
+      <!-- 时间轴站点 -->
+      <div class="fav-timeline-section">
+        <div class="fav-section-title">
+          <span>站点时间轴</span>
+          <span style="font-size:11px;color:var(--muted);font-weight:400">点击站点查看预估时间</span>
+        </div>
+        <div class="fav-timeline" id="favTimeline">
+          ${renderTimeline(stations, busPositions)}
+        </div>
+      </div>
+
+      <!-- 车辆列表 -->
+      ${buses.length > 0 ? `
+        <div class="fav-section-title" style="margin-top:16px">
+          <span>实时车辆列表</span>
+        </div>
+        <div class="fav-bus-list">
+          ${buses.slice(0, 5).map(bus => `
+            <div class="fav-bus-item">
+              <div class="fav-bus-plate">${escapeHtml(bus.busId || '未知')}</div>
+              <div class="fav-bus-info">
+                <span>第 ${bus.order || '?'} 站</span>
+                <span>${capacityLabel(bus.capacity)}</span>
+                <span>${bus.speed !== undefined ? bus.speed.toFixed(1) + ' m/s' : ''}</span>
+              </div>
+              ${bus.travels && bus.travels.length > 0 && targetStation ? (() => {
+                const t = bus.travels.find(tt => tt.order === targetStation.order);
+                return t ? `<div class="fav-bus-eta">${formatETA(t.travelTime)}</div>` : '';
+              })() : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <div style="text-align:center;font-size:11px;color:var(--muted-2);margin-top:12px">
+        每 30 秒自动刷新 · 最后更新 ${new Date().toLocaleTimeString()}
+      </div>
+    `;
+
+    // 绑定按钮
+    document.getElementById('favRefreshBtn').onclick = async () => {
+      const newDetail = await ChelaileAPI.lineDetail(DEFAULT_CITY, fav.lineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+      if (newDetail.success) {
+        favCurrentDetail = newDetail;
+        renderFavDetail(fav, newDetail);
+        showToast('已刷新');
+      } else {
+        showToast('刷新失败');
+      }
+    };
+
+    document.getElementById('favReverseBtn').onclick = () => {
+      showToast('换向功能需要对向线路 ID，此为演示');
+    };
+
+    // 绑定时间轴站点点击
+    document.querySelectorAll('.fav-tl-station').forEach(stn => {
+      stn.addEventListener('click', () => {
+        const order = parseInt(stn.getAttribute('data-order'));
+        const sn = stn.getAttribute('data-sn');
+        showStationETA(order, sn, buses);
+      });
+    });
+  }
+
+  function renderTimeline(stations, busPositions) {
+    if (stations.length === 0) {
+      return '<div style="text-align:center;padding:20px;color:var(--muted)">暂无站点数据</div>';
+    }
+
+    // 只显示一部分站点（避免太挤），加上首尾
+    const displayStations = [];
+    const total = stations.length;
+    if (total <= 15) {
+      stations.forEach(s => displayStations.push(s));
+    } else {
+      // 取前5 + 中间5 + 后5
+      for (let i = 0; i < 5; i++) displayStations.push(stations[i]);
+      const midStart = Math.floor(total / 2) - 2;
+      for (let i = midStart; i < midStart + 5; i++) displayStations.push(stations[i]);
+      for (let i = total - 5; i < total; i++) displayStations.push(stations[i]);
+    }
+
+    let html = '';
+    const maxOrder = stations.length;
+
+    displayStations.forEach((station, idx) => {
+      const isFirst = idx === 0;
+      const isLast = idx === displayStations.length - 1;
+      const prevOrder = idx > 0 ? displayStations[idx - 1].order : 0;
+      const gap = station.order - prevOrder - 1;
+
+      // 查找此站有没有车
+      const busesAtStation = busPositions.filter(b => Math.floor(b.order) === station.order);
+
+      html += `
+        ${gap > 0 ? `<div class="fav-tl-gap">... ${gap} 站 ...</div>` : ''}
+        <div class="fav-tl-station" data-order="${station.order}" data-sn="${escapeHtml(station.sn || '')}">
+          <div class="fav-tl-left">
+            <div class="fav-tl-dot"></div>
+            <div class="fav-tl-line ${isLast ? 'fav-tl-line-end' : ''}"></div>
+          </div>
+          <div class="fav-tl-content">
+            <div class="fav-tl-name">${escapeHtml(station.sn || '')}</div>
+            <div class="fav-tl-order">第 ${station.order} 站</div>
+          </div>
+          <div class="fav-tl-right">
+            ${busesAtStation.length > 0 ? `
+              <div class="fav-tl-bus" title="${busesAtStation.map(b => b.bus.busId).join(', ')}">
+                🚌 ${busesAtStation.length}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    });
+
+    // 在两站之间显示车辆（如果车辆不在站点上）
+    // 简化处理：把在两站之间的车显示在靠近下一站的位置
+    return html;
+  }
+
+  function showStationETA(order, sn, buses) {
+    // 查找经过该站的所有车辆的 ETA
+    const etas = [];
+    buses.forEach(bus => {
+      if (bus.travels) {
+        const t = bus.travels.find(tt => tt.order === order);
+        if (t && t.travelTime > 0) {
+          etas.push({ busId: bus.busId, travelTime: t.travelTime, recommTip: t.recommTip });
+        }
+      }
+    });
+
+    if (etas.length === 0) {
+      showToast(`${sn}：暂无到站预测`);
+      return;
+    }
+
+    etas.sort((a, b) => a.travelTime - b.travelTime);
+    const top = etas.slice(0, 3);
+    const msg = `${sn}\n` + top.map(e => `  ${e.busId}：${formatETA(e.travelTime)}${e.recommTip ? ' (' + e.recommTip + ')' : ''}`).join('\n');
+    showToast(msg);
+  }
+
   // ========== 应用路由 ==========
   const DEMOS = {
     commute: { title: '通勤到站提醒', render: renderCommute, init: initCommute },
@@ -902,6 +1269,7 @@ const DemoApps = (function() {
     prediction: { title: '出行时间预测', render: renderPrediction, init: initPrediction },
     lastbus: { title: '末班车守护', render: renderLastbus, init: initLastbus },
     race: { title: '多线路竞速', render: renderRace, init: initRace },
+    favorites: { title: '收藏公交线路', render: renderFavorites, init: initFavorites },
   };
 
   function showDemo(id) {

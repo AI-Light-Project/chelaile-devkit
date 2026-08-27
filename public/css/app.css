@@ -954,11 +954,283 @@ html, body {
   transform: translateX(-50%) translateY(0);
 }
 
+/* ===== 收藏公交线路 Demo ===== */
+.fav-card {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.fav-card:hover {
+  border-color: var(--brand);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.fav-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.fav-line-no {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brand);
+  min-width: 60px;
+}
+.fav-line-info { display: flex; flex-direction: column; gap: 4px; }
+.fav-station { font-size: 14px; font-weight: 600; }
+.fav-dest { font-size: 12px; color: var(--muted); }
+.fav-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.fav-status {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+.fav-status-coming { background: var(--green-bg); color: var(--green); }
+.fav-status-wait { background: var(--accent2-bg); color: var(--accent2); }
+.fav-status-running { background: var(--accent-bg); color: var(--accent); }
+.fav-bus-id {
+  font-size: 10px;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+}
+.fav-arrow {
+  font-size: 20px;
+  color: var(--muted-2);
+  line-height: 1;
+}
+
+/* 详情页顶部 */
+.fav-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.fav-detail-title { display: flex; align-items: center; gap: 10px; }
+.fav-line-badge {
+  background: var(--brand);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+}
+.fav-route-text {
+  font-size: 13px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.fav-detail-actions { display: flex; gap: 8px; }
+
+/* 状态卡片 */
+.fav-status-card {
+  background: linear-gradient(135deg, var(--brand-bg), var(--accent-bg));
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.fav-status-main {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.fav-status-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.fav-status-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+.fav-status-value.fav-status-coming { color: var(--green); }
+.fav-status-value.fav-status-wait { color: var(--accent2); }
+.fav-status-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+/* 数据网格 */
+.fav-data-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.fav-data-item {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+}
+.fav-data-icon { font-size: 20px; margin-bottom: 4px; }
+.fav-data-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fav-data-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* 区块标题 */
+.fav-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+/* 时间轴 */
+.fav-timeline-section { margin-bottom: 8px; }
+.fav-timeline {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 16px 12px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.fav-tl-station {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+.fav-tl-station:hover { background: var(--bg3); }
+.fav-tl-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+.fav-tl-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--rule-2);
+  border: 2px solid var(--bg2);
+  z-index: 1;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--rule-2);
+}
+.fav-tl-line {
+  width: 2px;
+  flex: 1;
+  background: var(--rule-2);
+  min-height: 20px;
+}
+.fav-tl-line-end { display: none; }
+.fav-tl-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+}
+.fav-tl-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.fav-tl-order {
+  font-size: 10px;
+  color: var(--muted-2);
+}
+.fav-tl-right {
+  display: flex;
+  align-items: center;
+  padding-top: 2px;
+}
+.fav-tl-bus {
+  background: var(--green-bg);
+  color: var(--green);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.fav-tl-gap {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted-2);
+  padding: 4px 0;
+  margin-left: 32px;
+}
+
+/* 车辆列表 */
+.fav-bus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fav-bus-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.fav-bus-plate {
+  background: var(--brand);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.fav-bus-info {
+  flex: 1;
+  display: flex;
+  gap: 14px;
+  margin-left: 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.fav-bus-eta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+}
+
 /* ===== 响应式 ===== */
 @media (max-width: 1024px) {
   .dev-layout { grid-template-columns: 240px 1fr; }
   .demo-grid { grid-template-columns: repeat(2, 1fr); }
   .debug-params-list { grid-template-columns: 1fr; }
+  .fav-data-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
   .top-nav { padding: 0 12px; }
