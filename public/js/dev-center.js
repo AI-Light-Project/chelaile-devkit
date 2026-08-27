@@ -360,8 +360,10 @@ const DevCenter = (function() {
   // ========== 渲染调试面板 ==========
   function renderDebugPanel(api) {
     const panel = document.getElementById('debugPanel');
+    const fab = document.getElementById('debugFab');
     const paramsDiv = document.getElementById('debugParams');
     panel.style.display = 'block';
+    fab.style.display = 'inline-flex';
 
     paramsDiv.innerHTML = api.params.map(p => `
       <div class="debug-param">
@@ -373,6 +375,11 @@ const DevCenter = (function() {
     // 绑定发送按钮
     const btn = document.getElementById('debugRunBtn');
     btn.onclick = () => runDebugRequest(api);
+
+    // 绑定浮动按钮 - 滚动到调试面板
+    fab.onclick = () => {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
   }
 
   // ========== 执行调试请求 ==========

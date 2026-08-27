@@ -22,6 +22,9 @@
     <button class="nav-tab" data-route="demo-apps">
       <span class="tab-icon">📱</span> 示例应用
     </button>
+    <button class="nav-tab" data-route="api-docs">
+      <span class="tab-icon">📚</span> API 文档
+    </button>
   </nav>
   <div class="nav-right">
     <span class="status-dot" id="apiStatus" title="API 连接状态"></span>
@@ -50,6 +53,11 @@
 
       <!-- 右侧详情区 -->
       <div class="dev-main">
+        <!-- 浮动调试按钮 -->
+        <button class="btn btn-primary debug-fab" id="debugFab" style="display:none">
+          🔧 在线调试
+        </button>
+
         <div class="api-detail" id="apiDetail">
           <div class="detail-placeholder">
             <div class="ph-icon">👈</div>
@@ -62,7 +70,7 @@
         <div class="debug-panel" id="debugPanel" style="display:none">
           <div class="debug-header">
             <h4>🔧 在线调试</h4>
-            <button class="btn btn-sm" id="debugRunBtn">发送请求</button>
+            <button class="btn btn-primary btn-sm" id="debugRunBtn">发送请求</button>
           </div>
           <div class="debug-body">
             <div class="debug-params" id="debugParams">
@@ -153,6 +161,9 @@
         <!-- JS 动态填充应用内容 -->
       </div>
     </div>
+  <!-- ========== API 文档 ========== -->
+  <section class="page" id="page-api-docs" style="display:none">
+    <iframe class="docs-iframe" src="/docs" frameborder="0"></iframe>
   </section>
 
 </main>
