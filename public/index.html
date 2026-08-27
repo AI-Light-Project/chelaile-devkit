@@ -53,36 +53,11 @@
 
       <!-- 右侧详情区 -->
       <div class="dev-main">
-        <!-- 浮动调试按钮 -->
-        <button class="btn btn-primary debug-fab" id="debugFab" style="display:none">
-          🔧 在线调试
-        </button>
-
         <div class="api-detail" id="apiDetail">
           <div class="detail-placeholder">
             <div class="ph-icon">👈</div>
             <p>选择左侧的 API 接口查看详情</p>
-            <p class="ph-sub">包含接口说明、参数、请求示例、响应示例</p>
-          </div>
-        </div>
-
-        <!-- 调试控制台 -->
-        <div class="debug-panel" id="debugPanel" style="display:none">
-          <div class="debug-header">
-            <h4>🔧 在线调试</h4>
-            <button class="btn btn-primary btn-sm" id="debugRunBtn">发送请求</button>
-          </div>
-          <div class="debug-body">
-            <div class="debug-params" id="debugParams">
-              <!-- JS 动态生成参数表单 -->
-            </div>
-            <div class="debug-response">
-              <div class="debug-resp-header">
-                <span>响应结果</span>
-                <span class="resp-status" id="respStatus"></span>
-              </div>
-              <pre class="debug-resp-content" id="respContent">// 点击"发送请求"查看结果</pre>
-            </div>
+            <p class="ph-sub">包含接口说明、参数、请求示例、响应示例、字段解释</p>
           </div>
         </div>
       </div>
@@ -167,6 +142,46 @@
 
 <!-- Toast 通知 -->
 <div class="toast" id="toast"></div>
+
+<!-- 浮动调试按钮 -->
+<button class="debug-float-btn" id="debugFloatBtn" title="在线调试">
+  <span class="float-icon">🔧</span>
+  <span class="float-text">调试</span>
+</button>
+
+<!-- 调试弹窗 -->
+<div class="debug-overlay" id="debugOverlay"></div>
+<div class="debug-popup" id="debugPopup">
+  <div class="debug-popup-header">
+    <h4>🔧 在线调试</h4>
+    <button class="debug-popup-close" id="debugCloseBtn" title="关闭">✕</button>
+  </div>
+  <div class="debug-popup-body">
+    <!-- 接口选择 -->
+    <div class="debug-field">
+      <label>选择接口</label>
+      <select id="debugApiSelect">
+        <option value="">-- 请选择接口 --</option>
+      </select>
+    </div>
+    <!-- 接口说明 -->
+    <div class="debug-api-info" id="debugApiInfo" style="display:none"></div>
+    <!-- 参数表单 -->
+    <div class="debug-params-list" id="debugParamsList"></div>
+    <!-- 发送按钮 -->
+    <button class="btn btn-primary debug-send-btn" id="debugSendBtn">
+      <span>🚀</span> 发送请求
+    </button>
+    <!-- 响应结果 -->
+    <div class="debug-response-box" id="debugResponseBox" style="display:none">
+      <div class="debug-resp-header">
+        <span>响应结果</span>
+        <span class="resp-status" id="popupRespStatus"></span>
+      </div>
+      <pre class="debug-resp-content" id="popupRespContent">// 点击"发送请求"查看结果</pre>
+    </div>
+  </div>
+</div>
 
 <script src="js/api.js"></script>
 <script src="js/dev-center.js"></script>

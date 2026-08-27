@@ -1,6 +1,6 @@
 /**
  * 车来了 DevKit - 开发者中心模块
- * API 文档 + 在线调试
+ * API 文档 + 在线调试（悬浮弹窗）
  */
 const DevCenter = (function() {
 
@@ -28,7 +28,17 @@ const DevCenter = (function() {
             { cityId: "018", cityName: "南京" }
           ]
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.cityList', type: 'array', desc: '所有支持的城市列表' },
+        { path: 'data.cityList[].cityId', type: 'string', desc: '城市唯一标识，用于其他接口的 cityId 参数' },
+        { path: 'data.cityList[].cityName', type: 'string', desc: '城市中文名称' },
+        { path: 'data.cityList[].cityPinyin', type: 'string', desc: '城市拼音，用于 URL 构造' },
+        { path: 'data.hotCityList', type: 'array', desc: '热门城市列表（精简结构）' },
+        { path: 'data.hotCityList[].cityId', type: 'string', desc: '热门城市 ID' },
+        { path: 'data.hotCityList[].cityName', type: 'string', desc: '热门城市名称' }
+      ]
     },
     {
       id: 'search',
@@ -65,7 +75,30 @@ const DevCenter = (function() {
             ]
           }
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.highlightKey', type: 'string', desc: '高亮关键词，前端可用于搜索结果高亮' },
+        { path: 'data.result.gpstype', type: 'string', desc: '坐标系类型，通常为 gcj（GCJ-02 火星坐标系）' },
+        { path: 'data.result.lineCount', type: 'number', desc: '匹配到的线路总数（数组仅返回前 3 条）' },
+        { path: 'data.result.lines', type: 'array', desc: '匹配线路列表（最多 3 条）' },
+        { path: 'data.result.lines[].lineId', type: 'string', desc: '线路唯一 ID，用于线路详情等接口' },
+        { path: 'data.result.lines[].lineNo', type: 'string', desc: '线路编号，如 "874"' },
+        { path: 'data.result.stationCount', type: 'number', desc: '匹配站点总数（数组仅返回前 3 条）' },
+        { path: 'data.result.stations', type: 'array', desc: '匹配站点列表（最多 3 条）' },
+        { path: 'data.result.stations[].sId', type: 'string', desc: '站点 ID，用于站点详情接口' },
+        { path: 'data.result.stations[].sn', type: 'string', desc: '站点名称' },
+        { path: 'data.result.stations[].lat', type: 'number', desc: '站点纬度（GCJ-02）' },
+        { path: 'data.result.stations[].lng', type: 'number', desc: '站点经度（GCJ-02）' },
+        { path: 'data.result.stations[].subwayV2', type: 'number', desc: '是否为地铁站（1=是, 0=否）' },
+        { path: 'data.result.poiCount', type: 'number', desc: '匹配 POI 总数（数组仅返回前 3 条）' },
+        { path: 'data.result.pois', type: 'array', desc: '匹配 POI 列表（最多 3 条）' },
+        { path: 'data.result.pois[].sn1', type: 'string', desc: 'POI 名称' },
+        { path: 'data.result.pois[].sn1Tag', type: 'string', desc: 'POI 类别标签，如 "地铁站"、"道路"' },
+        { path: 'data.result.pois[].lat', type: 'number', desc: 'POI 纬度（GCJ-02）' },
+        { path: 'data.result.pois[].lng', type: 'number', desc: 'POI 经度（GCJ-02）' },
+        { path: 'data.result.ordertype', type: 'string', desc: '排序规则，逗号分隔（1=线路, 2=站点, 3=POI）' }
+      ]
     },
     {
       id: 'nearby_stops',
@@ -102,7 +135,28 @@ const DevCenter = (function() {
             ]
           }
         ]
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data', type: 'array', desc: '附近站点列表，按距离排序' },
+        { path: 'data[].sn', type: 'string', desc: '站点名称' },
+        { path: 'data[].sId', type: 'string', desc: '站点 ID' },
+        { path: 'data[].distance', type: 'number', desc: '距当前坐标的距离（米）' },
+        { path: 'data[].isSubway', type: 'number', desc: '是否为地铁站（1=是, 0=否）' },
+        { path: 'data[].subwayV2Lines', type: 'array', desc: '地铁站经停线路列表（仅地铁站返回）' },
+        { path: 'data[].subwayV2Lines[].line.lineName', type: 'string', desc: '地铁线路全名' },
+        { path: 'data[].subwayV2Lines[].line.shortName', type: 'string', desc: '地铁线路简称' },
+        { path: 'data[].subwayV2Lines[].sublines[].destName', type: 'string', desc: '终点站名' },
+        { path: 'data[].subwayV2Lines[].sublines[].firstTime', type: 'string', desc: '首班车时间' },
+        { path: 'data[].subwayV2Lines[].sublines[].lastTime', type: 'string', desc: '末班车时间' },
+        { path: 'data[].lines', type: 'array', desc: '公交站经停线路列表（仅公交站返回）' },
+        { path: 'data[].lines[].line.name', type: 'string', desc: '线路编号' },
+        { path: 'data[].lines[].line.endSn', type: 'string', desc: '终点站名' },
+        { path: 'data[].lines[].line.direction', type: 'number', desc: '方向（0=上行, 1=下行）' },
+        { path: 'data[].lines[].line.firstTime', type: 'string', desc: '首班车时间' },
+        { path: 'data[].lines[].line.lastTime', type: 'string', desc: '末班车时间' },
+        { path: 'data[].lines[].stnStates', type: 'array', desc: '实时到站状态列表' }
+      ]
     },
     {
       id: 'stop_detail',
@@ -128,7 +182,22 @@ const DevCenter = (function() {
             { line: { name: "874", lineId: "002537645730", endSn: "滨江客运站" }, buses: [{ busId: "苏A02872F", travelTime: 199 }] }
           ]
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.station', type: 'object', desc: '当前站点信息' },
+        { path: 'data.station.sn', type: 'string', desc: '站点名称' },
+        { path: 'data.station.sId', type: 'string', desc: '站点 ID' },
+        { path: 'data.lines', type: 'array', desc: '经停线路列表' },
+        { path: 'data.lines[].line.name', type: 'string', desc: '线路编号' },
+        { path: 'data.lines[].line.lineId', type: 'string', desc: '线路唯一 ID' },
+        { path: 'data.lines[].line.endSn', type: 'string', desc: '终点站名' },
+        { path: 'data.lines[].line.direction', type: 'number', desc: '方向（0=上行, 1=下行）' },
+        { path: 'data.lines[].buses', type: 'array', desc: '实时车辆列表' },
+        { path: 'data.lines[].buses[].busId', type: 'string', desc: '车牌号' },
+        { path: 'data.lines[].buses[].travelTime', type: 'number', desc: '预计到站时间（秒）' },
+        { path: 'data.lines[].buses[].distanceToNextStn', type: 'number', desc: '距下一站距离（米）' }
+      ]
     },
     {
       id: 'line_detail',
@@ -156,7 +225,33 @@ const DevCenter = (function() {
             { busId: "苏A02872F", lat: 31.8954, lng: 118.8065, speed: 2.8, capacity: 0, order: 5, travels: [{ order: 7, travelTime: 199, recommTip: "13:05" }] }
           ]
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.line', type: 'object', desc: '线路基础信息' },
+        { path: 'data.line.name', type: 'string', desc: '线路编号' },
+        { path: 'data.line.startSn', type: 'string', desc: '起点站名' },
+        { path: 'data.line.endSn', type: 'string', desc: '终点站名' },
+        { path: 'data.line.firstTime', type: 'string', desc: '首班车时间' },
+        { path: 'data.line.lastTime', type: 'string', desc: '末班车时间' },
+        { path: 'data.line.stationsNum', type: 'number', desc: '总站数' },
+        { path: 'data.stations', type: 'array', desc: '站点列表（按行驶顺序排列）' },
+        { path: 'data.stations[].order', type: 'number', desc: '站点序号（从 1 开始）' },
+        { path: 'data.stations[].sn', type: 'string', desc: '站点名称' },
+        { path: 'data.stations[].lat', type: 'number', desc: '站点纬度' },
+        { path: 'data.stations[].lng', type: 'number', desc: '站点经度' },
+        { path: 'data.buses', type: 'array', desc: '实时运营车辆列表' },
+        { path: 'data.buses[].busId', type: 'string', desc: '车牌号' },
+        { path: 'data.buses[].lat', type: 'number', desc: '车辆当前纬度' },
+        { path: 'data.buses[].lng', type: 'number', desc: '车辆当前经度' },
+        { path: 'data.buses[].speed', type: 'number', desc: '当前速度（m/s）' },
+        { path: 'data.buses[].capacity', type: 'number', desc: '拥挤度（0=空, 1=一般, 2=拥挤）' },
+        { path: 'data.buses[].order', type: 'number', desc: '车辆所在站点序号' },
+        { path: 'data.buses[].travels', type: 'array', desc: '到站预测列表' },
+        { path: 'data.buses[].travels[].order', type: 'number', desc: '目标站点序号' },
+        { path: 'data.buses[].travels[].travelTime', type: 'number', desc: '预计到达时间（秒）' },
+        { path: 'data.buses[].travels[].recommTip', type: 'string', desc: '推荐提示，如 "13:05" 预计到达时间' }
+      ]
     },
     {
       id: 'line_route',
@@ -181,7 +276,15 @@ const DevCenter = (function() {
             distance: 32500
           }
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.route', type: 'object', desc: '线路轨迹对象' },
+        { path: 'data.route.points', type: 'array', desc: 'GPS 坐标点串，按行驶顺序排列' },
+        { path: 'data.route.points[].lat', type: 'number', desc: '纬度坐标' },
+        { path: 'data.route.points[].lng', type: 'number', desc: '经度坐标' },
+        { path: 'data.route.distance', type: 'number', desc: '线路总长度（米）' }
+      ]
     },
     {
       id: 'line_realtime',
@@ -206,7 +309,16 @@ const DevCenter = (function() {
             { busId: "苏A02872F", order: 5, travelTime: 199, capacity: 0, distanceToNextStn: 272 }
           ]
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.buses', type: 'array', desc: '实时车辆列表，按到站时间排序' },
+        { path: 'data.buses[].busId', type: 'string', desc: '车牌号' },
+        { path: 'data.buses[].order', type: 'number', desc: '车辆当前所在站点序号' },
+        { path: 'data.buses[].travelTime', type: 'number', desc: '到达目标站点预计时间（秒）' },
+        { path: 'data.buses[].capacity', type: 'number', desc: '拥挤度（0=空座, 1=有座, 2=无座）' },
+        { path: 'data.buses[].distanceToNextStn', type: 'number', desc: '距下一站距离（米）' }
+      ]
     },
     {
       id: 'timetable',
@@ -233,7 +345,16 @@ const DevCenter = (function() {
             { time: "07:00", type: "高峰" }
           ]
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.firstTime', type: 'string', desc: '首班车发车时间' },
+        { path: 'data.lastTime', type: 'string', desc: '末班车发车时间' },
+        { path: 'data.interval', type: 'string', desc: '发车间隔描述' },
+        { path: 'data.timetable', type: 'array', desc: '时刻表详情列表' },
+        { path: 'data.timetable[].time', type: 'string', desc: '发车时间' },
+        { path: 'data.timetable[].type', type: 'string', desc: '时段类型，如 "首班"、"高峰"、"平峰"、"末班"' }
+      ]
     },
     {
       id: 'plan_transit',
@@ -267,11 +388,27 @@ const DevCenter = (function() {
             }
           ]
         }
-      }, null, 2)
+      }, null, 2),
+      responseFields: [
+        { path: 'success', type: 'boolean', desc: '请求是否成功' },
+        { path: 'data.routes', type: 'array', desc: '换乘方案列表，按推荐程度排序' },
+        { path: 'data.routes[].duration', type: 'number', desc: '总耗时（秒）' },
+        { path: 'data.routes[].distance', type: 'number', desc: '总距离（米）' },
+        { path: 'data.routes[].segments', type: 'array', desc: '行程分段列表' },
+        { path: 'data.routes[].segments[].type', type: 'string', desc: '段类型：walk（步行）/ bus（公交）/ subway（地铁）' },
+        { path: 'data.routes[].segments[].distance', type: 'number', desc: '该段距离（米），步行段返回' },
+        { path: 'data.routes[].segments[].instruction', type: 'string', desc: '步行指引文字，步行段返回' },
+        { path: 'data.routes[].segments[].line', type: 'string', desc: '线路名称，乘车段返回' },
+        { path: 'data.routes[].segments[].from', type: 'string', desc: '上车站名，乘车段返回' },
+        { path: 'data.routes[].segments[].to', type: 'string', desc: '下车站名，乘车段返回' },
+        { path: 'data.routes[].segments[].stops', type: 'number', desc: '经过站数，乘车段返回' },
+        { path: 'data.routes[].segments[].duration', type: 'number', desc: '该段耗时（秒），乘车段返回' }
+      ]
     }
   ];
 
   let currentApi = null;
+  let debugSelectedApi = null;
 
   // ========== 渲染 API 列表 ==========
   function renderApiList(filter = '') {
@@ -289,7 +426,6 @@ const DevCenter = (function() {
       </li>
     `).join('');
 
-    // 绑定点击事件
     list.querySelectorAll('.api-item').forEach(item => {
       item.addEventListener('click', () => {
         const id = item.getAttribute('data-id');
@@ -305,7 +441,6 @@ const DevCenter = (function() {
     currentApi = api;
     renderApiList(document.getElementById('apiSearchInput').value);
     renderApiDetail(api);
-    renderDebugPanel(api);
   }
 
   // ========== 渲染 API 详情 ==========
@@ -321,6 +456,17 @@ const DevCenter = (function() {
           </tr>
         `).join('')
       : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:16px">无参数</td></tr>';
+
+    // 返回字段解释表
+    const fieldRows = api.responseFields && api.responseFields.length
+      ? api.responseFields.map(f => `
+          <tr>
+            <td><span class="field-path">${f.path}</span></td>
+            <td><span class="field-type">${f.type}</span></td>
+            <td>${f.desc}</td>
+          </tr>
+        `).join('')
+      : '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px">暂无字段说明</td></tr>';
 
     detail.innerHTML = `
       <h2>
@@ -351,41 +497,122 @@ const DevCenter = (function() {
       </div>
 
       <div class="detail-section">
+        <h3>返回字段说明</h3>
+        <table class="field-table">
+          <thead>
+            <tr><th>字段路径</th><th>类型</th><th>说明</th></tr>
+          </thead>
+          <tbody>${fieldRows}</tbody>
+        </table>
+      </div>
+
+      <div class="detail-section">
         <h3>后端调用</h3>
         <pre class="code-block">${escapeHtml(api.backendPath)}</pre>
       </div>
     `;
   }
 
-  // ========== 渲染调试面板 ==========
-  function renderDebugPanel(api) {
-    const panel = document.getElementById('debugPanel');
-    const fab = document.getElementById('debugFab');
-    const paramsDiv = document.getElementById('debugParams');
-    panel.style.display = 'block';
-    fab.style.display = 'inline-flex';
+  // ========== 调试弹窗逻辑 ==========
 
-    paramsDiv.innerHTML = api.params.map(p => `
-      <div class="debug-param">
-        <label>${p.name}${p.required ? '<span class="param-req">*</span>' : ''} <span style="color:var(--muted-2);font-weight:400">(${p.type})</span></label>
+  function initDebugPopup() {
+    const floatBtn = document.getElementById('debugFloatBtn');
+    const overlay = document.getElementById('debugOverlay');
+    const popup = document.getElementById('debugPopup');
+    const closeBtn = document.getElementById('debugCloseBtn');
+    const select = document.getElementById('debugApiSelect');
+    const sendBtn = document.getElementById('debugSendBtn');
+
+    // 填充接口下拉列表
+    select.innerHTML = '<option value="">-- 请选择接口 --</option>' +
+      APIS.map(a => `<option value="${a.id}">${a.name} (${a.method} ${a.endpoint})</option>`).join('');
+
+    // 浮动按钮 → 打开弹窗
+    floatBtn.addEventListener('click', () => openDebugPopup());
+
+    // 遮罩 → 关闭弹窗
+    overlay.addEventListener('click', () => closeDebugPopup());
+
+    // 关闭按钮
+    closeBtn.addEventListener('click', () => closeDebugPopup());
+
+    // ESC 关闭
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && popup.classList.contains('show')) {
+        closeDebugPopup();
+      }
+    });
+
+    // 接口选择 → 渲染参数
+    select.addEventListener('change', () => {
+      const id = select.value;
+      if (!id) {
+        debugSelectedApi = null;
+        document.getElementById('debugApiInfo').style.display = 'none';
+        document.getElementById('debugParamsList').innerHTML = '';
+        document.getElementById('debugResponseBox').style.display = 'none';
+        return;
+      }
+      const api = APIS.find(a => a.id === id);
+      debugSelectedApi = api;
+      renderPopupApiInfo(api);
+      renderPopupParams(api);
+    });
+
+    // 发送请求
+    sendBtn.addEventListener('click', () => {
+      if (!debugSelectedApi) {
+        showToast('请先选择接口');
+        return;
+      }
+      runPopupDebugRequest(debugSelectedApi);
+    });
+  }
+
+  function openDebugPopup() {
+    document.getElementById('debugOverlay').classList.add('show');
+    document.getElementById('debugPopup').classList.add('show');
+    // 如果当前开发者中心有选中接口，自动选中
+    if (currentApi && !document.getElementById('debugApiSelect').value) {
+      document.getElementById('debugApiSelect').value = currentApi.id;
+      debugSelectedApi = currentApi;
+      renderPopupApiInfo(currentApi);
+      renderPopupParams(currentApi);
+    }
+  }
+
+  function closeDebugPopup() {
+    document.getElementById('debugOverlay').classList.remove('show');
+    document.getElementById('debugPopup').classList.remove('show');
+  }
+
+  function renderPopupApiInfo(api) {
+    const info = document.getElementById('debugApiInfo');
+    info.style.display = 'block';
+    info.innerHTML = `
+      <span class="api-method-tag ${api.method.toLowerCase()}">${api.method}</span>
+      <span class="api-endpoint">${api.endpoint}</span>
+      <div style="margin-top:6px;color:var(--muted);font-size:11px">${api.description}</div>
+    `;
+  }
+
+  function renderPopupParams(api) {
+    const container = document.getElementById('debugParamsList');
+    if (!api.params.length) {
+      container.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">该接口无需参数</div>';
+      return;
+    }
+    container.innerHTML = api.params.map(p => `
+      <div class="debug-param-item">
+        <label>${p.name}${p.required ? '<span class="param-req">*</span>' : ''}<span class="param-type">(${p.type})</span></label>
         <input type="text" data-param="${p.name}" value="${p.default || ''}" placeholder="${p.desc}">
       </div>
     `).join('');
-
-    // 绑定发送按钮
-    const btn = document.getElementById('debugRunBtn');
-    btn.onclick = () => runDebugRequest(api);
-
-    // 绑定浮动按钮 - 滚动到调试面板
-    fab.onclick = () => {
-      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
   }
 
-  // ========== 执行调试请求 ==========
-  async function runDebugRequest(api) {
-    const paramsDiv = document.getElementById('debugParams');
-    const inputs = paramsDiv.querySelectorAll('input[data-param]');
+  async function runPopupDebugRequest(api) {
+    const container = document.getElementById('debugParamsList');
+    const inputs = container.querySelectorAll('input[data-param]');
     const params = {};
     inputs.forEach(inp => {
       const key = inp.getAttribute('data-param');
@@ -393,11 +620,17 @@ const DevCenter = (function() {
       if (val !== '') params[key] = val;
     });
 
-    const respStatus = document.getElementById('respStatus');
-    const respContent = document.getElementById('respContent');
+    const respStatus = document.getElementById('popupRespStatus');
+    const respContent = document.getElementById('popupRespContent');
+    const respBox = document.getElementById('debugResponseBox');
+    respBox.style.display = 'flex';
     respStatus.textContent = '请求中...';
     respStatus.className = 'resp-status';
     respContent.textContent = '// 正在请求...';
+
+    const sendBtn = document.getElementById('debugSendBtn');
+    sendBtn.disabled = true;
+    sendBtn.style.opacity = '0.6';
 
     let result;
     try {
@@ -481,6 +714,9 @@ const DevCenter = (function() {
       respStatus.textContent = '失败';
       respStatus.className = 'resp-status error';
       respContent.textContent = '异常: ' + e.message;
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.style.opacity = '';
     }
   }
 
@@ -491,12 +727,20 @@ const DevCenter = (function() {
     return div.innerHTML;
   }
 
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
   // ========== 初始化 ==========
   function init() {
     renderApiList();
     document.getElementById('apiSearchInput').addEventListener('input', (e) => {
       renderApiList(e.target.value);
     });
+    initDebugPopup();
     // 默认选中第一个
     if (APIS.length > 0) {
       selectApi(APIS[0].id);
