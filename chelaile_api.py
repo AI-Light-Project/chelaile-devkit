@@ -8,9 +8,33 @@
 import hashlib
 import json
 import base64
+import re
+import html
 import requests
 from urllib.parse import urlencode
 from Crypto.Cipher import AES
+
+
+def _decode_html_entities(obj):
+    """递归解码 HTML 实体编码（如 &aring; &#x90; 等）"""
+    if isinstance(obj, str):
+        # 先解码标准 HTML 实体
+        decoded = html.unescape(obj)
+        # 移除不可打印控制字符 (除 \t \n \r 外)
+        decoded = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', decoded)
+        # 如果解码后包含 Latin-1 范围的高位字符（>127），尝试重新按 UTF-8 解码
+        # 这是因为 API 将 UTF-8 字节编码成了 HTML 实体（如 &aring; = \xe5）
+        if any(ord(c) > 127 for c in decoded):
+            try:
+                return decoded.encode('latin-1').decode('utf-8')
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                return decoded
+        return decoded
+    elif isinstance(obj, dict):
+        return {k: _decode_html_entities(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_decode_html_entities(v) for v in obj]
+    return obj
 
 # ===== 常量定义 =====
 BASE_DOMAIN = "https://web.chelaile.net.cn"
@@ -79,8 +103,8 @@ def parse_encrypted_response(raw_text: str) -> dict:
     envelope = json.loads(raw_text[json_start:json_end])
     data = envelope.get("jsonr", {}).get("data", {})
     if "encryptResult" in data:
-        return decrypt_result(data["encryptResult"])
-    return data
+        return _decode_html_entities(decrypt_result(data["encryptResult"]))
+    return _decode_html_entities(data)
 
 
 def request_encrypted(url: str, params: dict) -> dict:

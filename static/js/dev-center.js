@@ -45,15 +45,33 @@ const DevCenter = (function() {
       sampleResponse: JSON.stringify({
         success: true,
         data: {
+          highlightKey: "吉印大道",
           result: {
-            stations: [
-              { sId: "12243", sn: "吉印大道", lat: 31.888328, lng: 118.790217, isSubway: 1 }
-            ],
-            lines: [
-              { lineId: "002537645730", name: "874", endSn: "滨江客运站" }
-            ],
+            gpstype: "gcj",
+            lineCount: 0,
+            lines: [],
+            stationCount: 0,
+            stations: [],
+            poiCount: 8,
             pois: [
-              { sn1: "吉印大道-地铁站", lat: 31.885807, lng: 118.795159 }
+              {
+                sn: "吉印大道-地铁站-南京市",
+                sn1: "吉印大道-地铁站",
+                sn1Address: "南京市江宁区",
+                lat: 31.885807,
+                lng: 118.795159,
+                sn1Tag: "南京市",
+                sn1Type: 0
+              },
+              {
+                sn: "吉印大道-道路",
+                sn1: "吉印大道",
+                sn1Address: "江宁区",
+                lat: 31.892694,
+                lng: 118.806174,
+                sn1Tag: "道路",
+                sn1Type: 0
+              }
             ]
           }
         }

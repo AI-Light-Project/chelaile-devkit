@@ -28,6 +28,34 @@ const DemoApps = (function() {
     return ['空座', '适中', '拥挤'][c] || '未知';
   }
 
+  /**
+   * 搜索站点：先查 stations，如果没有则从 pois 中提取站点类结果
+   * 返回 { sId, sn, lat, lng } 或 null
+   */
+  async function searchStation(cityId, keyword) {
+    const result = await ChelaileAPI.search(cityId, keyword);
+    if (!result.success) return null;
+
+    const data = result.data || {};
+    const res = data.result || {};
+
+    // 优先从 stations 取
+    if (res.stations && res.stations.length > 0) {
+      const s = res.stations[0];
+      return { sId: s.sId, sn: s.sn, lat: s.lat, lng: s.lng };
+    }
+
+    // 从 pois 取（找包含"地铁站"或"公交站"的）
+    if (res.pois && res.pois.length > 0) {
+      const poi = res.pois.find(p =>
+        p.sn1 && (p.sn1.includes('地铁站') || p.sn1.includes('公交站') || p.sn1.includes(keyword))
+      ) || res.pois[0];
+      return { sId: poi.sId || '', sn: poi.sn1 || poi.sn || keyword, lat: poi.lat, lng: poi.lng };
+    }
+
+    return null;
+  }
+
   function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -768,20 +796,20 @@ const DemoApps = (function() {
 
     resultEl.innerHTML = '<div class="alert-box alert-info">⏳ 正在搜索站点...</div>';
 
-    // 搜索站点
-    const searchResult = await ChelaileAPI.search(DEFAULT_CITY, stopName);
-    if (!searchResult.success || !searchResult.data.result?.stations?.length) {
+    // 搜索站点（stations 为空时从 pois 兜底）
+    const station = await searchStation(DEFAULT_CITY, stopName);
+    if (!station) {
       resultEl.innerHTML = '<div class="alert-box alert-error">❌ 未找到站点</div>';
       return;
     }
 
-    const station = searchResult.data.result.stations[0];
-    const stationId = station.sId;
-    const physicalStId = station.physicalStId || stationId;
+    const physicalStId = station.sId;
+    const stationLat = station.lat || DEFAULT_LAT;
+    const stationLng = station.lng || DEFAULT_LNG;
 
     // 获取站点详情
     const detailResult = await ChelaileAPI.stopDetail(DEFAULT_CITY, physicalStId, {
-      lat: DEFAULT_LAT, lng: DEFAULT_LNG
+      lat: stationLat, lng: stationLng
     });
 
     let lines = [];
@@ -791,7 +819,7 @@ const DemoApps = (function() {
 
     // 如果站点详情没有线路，用 nearby_stops 兜底
     if (lines.length === 0) {
-      const nearby = await ChelaileAPI.nearbyStops(DEFAULT_CITY, station.lat, station.lng, 3);
+      const nearby = await ChelaileAPI.nearbyStops(DEFAULT_CITY, stationLat, stationLng, 3);
       if (nearby.success && nearby.data.length > 0) {
         const stop = nearby.data.find(s => s.sn && s.sn.includes(stopName)) || nearby.data[0];
         lines = (stop.lines || []).map(l => ({
