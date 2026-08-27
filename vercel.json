@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "api/index.py",
@@ -13,26 +14,30 @@
       "use": "@vercel/static"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
     },
     {
-      "source": "/docs",
-      "destination": "/docs/api-reference.html"
+      "src": "/docs",
+      "dest": "docs/api-reference.html"
     },
     {
-      "source": "/css/(.*)",
-      "destination": "/public/css/$1"
+      "src": "/css/(.*)",
+      "dest": "public/css/$1"
     },
     {
-      "source": "/js/(.*)",
-      "destination": "/public/js/$1"
+      "src": "/js/(.*)",
+      "dest": "public/js/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/public/$1"
+      "src": "/",
+      "dest": "public/index.html"
+    },
+    {
+      "src": "/(.*\\.(?:html|css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf))",
+      "dest": "public/$1"
     }
   ]
 }
