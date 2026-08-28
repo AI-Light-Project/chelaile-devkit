@@ -904,6 +904,8 @@ const DemoApps = (function() {
   let favCurrentLine = null;
   let favCurrentDetail = null;
   let favRefreshTimer = null;
+  let favShowAllStations = false;
+  let favOppositeLineId = null; // 缓存对向线路ID
 
   function renderFavorites() {
     return `
@@ -1017,23 +1019,44 @@ const DemoApps = (function() {
   }
 
   function showFavDetail(fav, detail) {
-    favCurrentLine = fav;
+    favCurrentLine = { ...fav };
     favCurrentDetail = detail;
+    favShowAllStations = false;
+    favOppositeLineId = null;
 
     document.getElementById('favList').style.display = 'none';
     document.getElementById('favDetail').style.display = 'block';
 
-    renderFavDetail(fav, detail);
+    renderFavDetail(favCurrentLine, detail);
 
     // 自动刷新（每 30 秒）
     clearInterval(favRefreshTimer);
     favRefreshTimer = setInterval(async () => {
-      const newDetail = await ChelaileAPI.lineDetail(DEFAULT_CITY, fav.lineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+      const newDetail = await ChelaileAPI.lineDetail(DEFAULT_CITY, favCurrentLine.lineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
       if (newDetail.success) {
         favCurrentDetail = newDetail;
-        renderFavDetail(fav, newDetail);
+        renderFavDetail(favCurrentLine, newDetail);
       }
     }, 30000);
+  }
+
+  // 获取对向线路 ID（带缓存）
+  async function getOppositeLineId(lineNo, currentEndSn) {
+    if (favOppositeLineId) return favOppositeLineId;
+    try {
+      const result = await ChelaileAPI.search(DEFAULT_CITY, lineNo);
+      if (!result.success || !result.data.result?.lines) return null;
+      const lines = result.data.result.lines;
+      // 找到终点站不同的那条
+      const opposite = lines.find(l => l.endSn && currentEndSn && l.endSn !== currentEndSn);
+      if (opposite) {
+        favOppositeLineId = opposite.lineId;
+        return opposite.lineId;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   function renderFavDetail(fav, detail) {
@@ -1119,12 +1142,19 @@ const DemoApps = (function() {
       <!-- 时间轴站点 -->
       <div class="fav-timeline-section">
         <div class="fav-section-title">
-          <span>站点时间轴</span>
-          <span style="font-size:11px;color:var(--muted);font-weight:400">点击站点查看预估时间</span>
+          <span>站点时间轴（共 ${stations.length} 站）</span>
+          <button class="btn btn-sm" id="favToggleStationsBtn" style="padding:3px 10px;font-size:11px">
+            ${favShowAllStations ? '收起' : '展开全部'}
+          </button>
         </div>
         <div class="fav-timeline" id="favTimeline">
-          ${renderTimeline(stations, busPositions)}
+          ${renderTimeline(stations, busPositions, favShowAllStations)}
         </div>
+        ${!favShowAllStations && stations.length > 15 ? `
+          <div style="text-align:center;margin-top:8px">
+            <span style="font-size:11px;color:var(--muted)">仅显示部分站点，点击上方"展开全部"查看全部 ${stations.length} 站</span>
+          </div>
+        ` : ''}
       </div>
 
       <!-- 车辆列表 -->
@@ -1155,7 +1185,7 @@ const DemoApps = (function() {
       </div>
     `;
 
-    // 绑定按钮
+    // 绑定刷新按钮
     document.getElementById('favRefreshBtn').onclick = async () => {
       const newDetail = await ChelaileAPI.lineDetail(DEFAULT_CITY, fav.lineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
       if (newDetail.success) {
@@ -1167,9 +1197,53 @@ const DemoApps = (function() {
       }
     };
 
-    document.getElementById('favReverseBtn').onclick = () => {
-      showToast('换向功能需要对向线路 ID，此为演示');
+    // 绑定换向按钮
+    document.getElementById('favReverseBtn').onclick = async () => {
+      const btn = document.getElementById('favReverseBtn');
+      btn.disabled = true;
+      btn.textContent = '换向中...';
+      const lineInfo = detail.data.line || {};
+      const oppLineId = await getOppositeLineId(fav.lineNo, lineInfo.endSn);
+
+      if (!oppLineId) {
+        btn.disabled = false;
+        btn.textContent = '⇄ 换向';
+        showToast('未找到对向线路');
+        return;
+      }
+
+      // 切换到对向
+      const newDetail = await ChelaileAPI.lineDetail(DEFAULT_CITY, oppLineId, { lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+      if (newDetail.success) {
+        const newLineInfo = newDetail.data.line || {};
+        // 交换缓存
+        const oldLineId = favCurrentLine.lineId;
+        favOppositeLineId = oldLineId;
+        favCurrentLine = {
+          ...favCurrentLine,
+          lineId: oppLineId,
+          endSn: newLineInfo.endSn || favCurrentLine.endSn,
+          direction: favCurrentLine.direction === 0 ? 1 : 0
+        };
+        favCurrentDetail = newDetail;
+        favShowAllStations = false;
+        renderFavDetail(favCurrentLine, newDetail);
+        showToast('已换向');
+      } else {
+        btn.disabled = false;
+        btn.textContent = '⇄ 换向';
+        showToast('换向失败');
+      }
     };
+
+    // 绑定展开/收起站点按钮
+    const toggleBtn = document.getElementById('favToggleStationsBtn');
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        favShowAllStations = !favShowAllStations;
+        renderFavDetail(fav, detail);
+      };
+    }
 
     // 绑定时间轴站点点击
     document.querySelectorAll('.fav-tl-station').forEach(stn => {
@@ -1179,31 +1253,35 @@ const DemoApps = (function() {
         showStationETA(order, sn, buses);
       });
     });
+
+    // 绑定 gap 点击（展开全部）
+    document.querySelectorAll('.fav-tl-gap').forEach(gap => {
+      gap.addEventListener('click', () => {
+        favShowAllStations = true;
+        renderFavDetail(fav, detail);
+      });
+    });
   }
 
-  function renderTimeline(stations, busPositions) {
+  function renderTimeline(stations, busPositions, showAll = false) {
     if (stations.length === 0) {
       return '<div style="text-align:center;padding:20px;color:var(--muted)">暂无站点数据</div>';
     }
 
-    // 只显示一部分站点（避免太挤），加上首尾
-    const displayStations = [];
+    let displayStations = [];
     const total = stations.length;
-    if (total <= 15) {
+
+    if (showAll || total <= 15) {
       stations.forEach(s => displayStations.push(s));
     } else {
-      // 取前5 + 中间5 + 后5
-      for (let i = 0; i < 5; i++) displayStations.push(stations[i]);
-      const midStart = Math.floor(total / 2) - 2;
-      for (let i = midStart; i < midStart + 5; i++) displayStations.push(stations[i]);
-      for (let i = total - 5; i < total; i++) displayStations.push(stations[i]);
+      // 取前8 + 后7（中间折叠，提示点击展开）
+      for (let i = 0; i < 8; i++) displayStations.push(stations[i]);
+      for (let i = total - 7; i < total; i++) displayStations.push(stations[i]);
     }
 
     let html = '';
-    const maxOrder = stations.length;
 
     displayStations.forEach((station, idx) => {
-      const isFirst = idx === 0;
       const isLast = idx === displayStations.length - 1;
       const prevOrder = idx > 0 ? displayStations[idx - 1].order : 0;
       const gap = station.order - prevOrder - 1;
@@ -1212,7 +1290,7 @@ const DemoApps = (function() {
       const busesAtStation = busPositions.filter(b => Math.floor(b.order) === station.order);
 
       html += `
-        ${gap > 0 ? `<div class="fav-tl-gap">... ${gap} 站 ...</div>` : ''}
+        ${gap > 0 ? `<div class="fav-tl-gap" title="点击展开全部站点">... 中间 ${gap} 站，点击展开 ...</div>` : ''}
         <div class="fav-tl-station" data-order="${station.order}" data-sn="${escapeHtml(station.sn || '')}">
           <div class="fav-tl-left">
             <div class="fav-tl-dot"></div>
@@ -1233,8 +1311,6 @@ const DemoApps = (function() {
       `;
     });
 
-    // 在两站之间显示车辆（如果车辆不在站点上）
-    // 简化处理：把在两站之间的车显示在靠近下一站的位置
     return html;
   }
 

@@ -1182,9 +1182,17 @@ html, body {
 .fav-tl-gap {
   text-align: center;
   font-size: 11px;
-  color: var(--muted-2);
-  padding: 4px 0;
+  color: var(--brand);
+  padding: 6px 0;
   margin-left: 32px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+  font-weight: 500;
+}
+.fav-tl-gap:hover {
+  background: var(--brand-bg);
+  color: var(--brand-dark);
 }
 
 /* 车辆列表 */
